@@ -11,7 +11,20 @@ export class IngredientsRepository implements IIngredientsRepository {
     sorting?: Sorting<IngredientDto>;
     pagination?: Pagination;
   }): Promise<IngredientDto[]> {
-    throw new Error("Method not implemented.");
+    return this.dbContext.prisma.ingredient.findMany({
+      where: opts.query
+        ? {
+            name: {
+              contains: opts.query,
+            },
+          }
+        : undefined,
+      skip: opts.pagination?.offset,
+      take: opts.pagination?.limit,
+      orderBy: opts.sorting?.map(([column, direction]) => ({
+        [column]: direction,
+      })),
+    });
   }
 
   add(name: string): Promise<IngredientDto> {
