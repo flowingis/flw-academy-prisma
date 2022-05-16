@@ -86,7 +86,14 @@ export class PizzasRepository implements IPizzasRepository {
   }
 
   async getById(id: PizzaId): Promise<PizzaDto | null> {
-    throw new Error("Method not implemented.");
+    const pizza = await this.dbContext.prisma.pizza.findUnique({
+      where: {
+        id,
+      },
+      ...PIZZA_SELECT,
+    });
+
+    return pizza ? mapPizza(pizza) : null;
   }
 
   delete(id: PizzaId): Promise<PizzaDto | null> {
