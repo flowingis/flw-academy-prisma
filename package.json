@@ -10,6 +10,9 @@
     "prisma": "prisma",
     "deploy": "npm run prisma generate && npm run build && npm run prisma migrate deploy && npm run start"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/flowingis/flw-academy-prisma.git"
