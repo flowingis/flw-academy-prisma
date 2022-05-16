@@ -1,7 +1,33 @@
+import { Prisma } from "@prisma/client";
 import { IDbContext } from "../../context";
 import { IngredientId, PizzaDto, PizzaId } from "../../dtos";
 import { Pagination, Sorting } from "../../models";
 import { IPizzasRepository } from "./pizzas.repository.model";
+
+const PIZZA_SELECT = {
+  select: {
+    id: true,
+    name: true,
+    pizzaIngredients: {
+      select: {
+        ingredient: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    },
+  },
+} as const;
+
+const mapPizza = (
+  pizza: Prisma.PizzaGetPayload<typeof PIZZA_SELECT>
+): PizzaDto => ({
+  id: pizza.id,
+  name: pizza.name,
+  ingredients: pizza.pizzaIngredients.map(({ ingredient }) => ingredient),
+});
 
 export class PizzasRepository implements IPizzasRepository {
   constructor(private readonly dbContext: IDbContext) {}
@@ -11,7 +37,38 @@ export class PizzasRepository implements IPizzasRepository {
     sorting?: Sorting<PizzaDto, "id" | "name">;
     pagination?: Pagination;
   }): Promise<PizzaDto[]> {
-    throw new Error("Method not implemented.");
+    const results = await this.dbContext.prisma.pizza.findMany({
+      where: opts.query
+        ? {
+            OR: [
+              {
+                name: {
+                  contains: opts.query,
+                },
+              },
+              {
+                pizzaIngredients: {
+                  some: {
+                    ingredient: {
+                      name: {
+                        contains: opts.query,
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          }
+        : undefined,
+      skip: opts.pagination?.offset,
+      take: opts.pagination?.limit,
+      orderBy: opts.sorting?.map(([field, direction]) => ({
+        [field]: direction,
+      })),
+      ...PIZZA_SELECT,
+    });
+
+    return results.map(mapPizza);
   }
 
   async add(name: string, ingredients: IngredientId[]): Promise<PizzaDto> {
@@ -22,29 +79,10 @@ export class PizzasRepository implements IPizzasRepository {
           create: ingredients.map(ingredientId => ({ ingredientId })),
         },
       },
-      select: {
-        id: true,
-        name: true,
-        pizzaIngredients: {
-          select: {
-            ingredient: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
+      ...PIZZA_SELECT,
     });
 
-    return {
-      id: newPizza.id,
-      name: newPizza.name,
-      ingredients: newPizza.pizzaIngredients.map(
-        ({ ingredient }) => ingredient
-      ),
-    };
+    return mapPizza(newPizza);
   }
 
   async getById(id: PizzaId): Promise<PizzaDto | null> {
