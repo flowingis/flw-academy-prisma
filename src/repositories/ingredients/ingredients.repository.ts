@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { IDbContext } from "../../context";
 import { IngredientDto, IngredientId } from "../../dtos";
 import { Pagination, Sorting } from "../../models";
@@ -51,7 +52,26 @@ export class IngredientsRepository implements IIngredientsRepository {
     });
   }
 
-  delete(id: IngredientId): Promise<IngredientDto | null> {
-    throw new Error("Method not implemented.");
+  async delete(id: IngredientId): Promise<IngredientDto | null> {
+    try {
+      return await this.dbContext.prisma.ingredient.delete({
+        where: {
+          id,
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        return null;
+      }
+      console.error(error);
+      throw error;
+    }
   }
 }
