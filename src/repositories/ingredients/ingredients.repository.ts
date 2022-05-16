@@ -27,7 +27,15 @@ export class IngredientsRepository implements IIngredientsRepository {
   }
 
   async getById(id: IngredientId): Promise<IngredientDto | null> {
-    throw new Error("Method not implemented.");
+    return this.dbContext.prisma.ingredient.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
   }
 
   delete(id: IngredientId): Promise<IngredientDto | null> {
