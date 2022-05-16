@@ -13,7 +13,9 @@ declare module "fastify" {
 }
 
 const prismaPlugin: FastifyPluginAsync = fp(async server => {
-  const prisma = new PrismaClient();
+  const prisma = new PrismaClient({
+    log: ["error", "warn", "info", "query"],
+  });
   await prisma.$connect();
 
   server.decorate("dbContext", {

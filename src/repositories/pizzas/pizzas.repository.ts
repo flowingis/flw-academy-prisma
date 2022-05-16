@@ -15,7 +15,36 @@ export class PizzasRepository implements IPizzasRepository {
   }
 
   async add(name: string, ingredients: IngredientId[]): Promise<PizzaDto> {
-    throw new Error("Method not implemented.");
+    const newPizza = await this.dbContext.prisma.pizza.create({
+      data: {
+        name,
+        pizzaIngredients: {
+          create: ingredients.map(ingredientId => ({ ingredientId })),
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        pizzaIngredients: {
+          select: {
+            ingredient: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      id: newPizza.id,
+      name: newPizza.name,
+      ingredients: newPizza.pizzaIngredients.map(
+        ({ ingredient }) => ingredient
+      ),
+    };
   }
 
   async getById(id: PizzaId): Promise<PizzaDto | null> {
