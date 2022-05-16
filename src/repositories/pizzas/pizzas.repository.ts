@@ -96,7 +96,23 @@ export class PizzasRepository implements IPizzasRepository {
     return pizza ? mapPizza(pizza) : null;
   }
 
-  delete(id: PizzaId): Promise<PizzaDto | null> {
-    throw new Error("Method not implemented.");
+  async delete(id: PizzaId): Promise<PizzaDto | null> {
+    try {
+      const pizza = await this.dbContext.prisma.pizza.delete({
+        where: {
+          id,
+        },
+        ...PIZZA_SELECT,
+      });
+      return mapPizza(pizza);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        return null;
+      }
+      throw error;
+    }
   }
 }

@@ -32,7 +32,7 @@ model Pizza {
 
 model PizzaIngredient {
   pizzaId     Int @map("PizzaId")
-  pizza       Pizza @relation(fields: [pizzaId], references: [id])
+  pizza       Pizza @relation(fields: [pizzaId], references: [id], onDelete: Cascade)
   ingredientId Int @map("IngredientId")
   ingredient  Ingredient @relation(fields: [ingredientId], references: [id])
 
