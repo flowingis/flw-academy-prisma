@@ -15,7 +15,15 @@ export class IngredientsRepository implements IIngredientsRepository {
   }
 
   add(name: string): Promise<IngredientDto> {
-    throw new Error("Method not implemented.");
+    return this.dbContext.prisma.ingredient.create({
+      data: {
+        name,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
   }
 
   async getById(id: IngredientId): Promise<IngredientDto | null> {
